@@ -8,9 +8,9 @@
             {{ game.gameStarted }}
           </p>
           <div>
-            <button v-if="step === 1" @click="joinRoom">Join</button>
+            <button v-if="step === 1" @click="joinGame">Join</button>
             <button
-              v-if="step === 2 && player.state !== 'ready'"
+              v-if="[2, 3].includes(step) && player.state !== 'ready'"
               @click="playerReady"
             >
               Ready
@@ -19,7 +19,6 @@
         </div>
         <div>
           <div class="h-element">
-            <!-- Exclamation -->
             <img
               v-if="displayMark"
               src="/images/action-mark.png"
@@ -94,10 +93,8 @@ export default {
 
     socket.on("gameStateChange", (game) => {
       this.game = game;
-      console.log("game", game);
 
       if (this.game.gameStarted === "playing") {
-        // add event listener on keyboard
         document.addEventListener("keydown", this.handleKeyDown);
       }
 
@@ -106,21 +103,26 @@ export default {
         document.removeEventListener("keydown", this.handleKeyDown);
         this.displayMark = false;
         this.step = 3;
-
         if (this.game.gameWinner === this.player.character) {
           this.status = "You won!";
         } else {
           this.status = "You lost!";
         }
+        this.restartGame();
       }
     });
   },
 
   methods: {
-    joinRoom() {
-      socket.emit("joinRoom");
+    joinGame() {
+      socket.emit("joinGame");
     },
     playerReady() {
+      if (["You won!", "You lost!"].includes(this.status)) {
+        this.status = "Waiting for other player...";
+      }
+      this.status = `Joined as ${this.player.character}`;
+
       socket.emit("playerReady");
     },
     gameState() {
@@ -132,6 +134,15 @@ export default {
     },
     handleKeyDown() {
       this.hitMark();
+    },
+
+    restartGame() {
+      this.step = 2;
+      this.game = {
+        gameStarted: false,
+        gameWinner: null,
+        countdown: null,
+      };
     },
   },
 };

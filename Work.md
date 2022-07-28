@@ -35,10 +35,11 @@ Vainqueur
 
 # Bugs
 
-V Waiting for developers -> emit pour tout le monde ?
-Gestion déconnexion
-Plusieurs parties
-V Chrono démarre alors que les deux jours pas prèts
+- [x] Waiting for developers -> emit pour tout le monde ?
+- [x] Gestion déconnexion
+- [x] Plusieurs parties
+- [x] Chrono démarre alors que les deux joueurs pas prèts
 
 1h30
+1h
 1h
