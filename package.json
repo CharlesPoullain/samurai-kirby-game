@@ -1,0 +1,16 @@
+{
+  "name": "kirbee",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm:dev:*\"",
+    "dev:front": "cd kirbee-front && npm run serve",
+    "dev:server": "cd kirbee-server && npm run serve"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^6.1.0"
+  }
+}
