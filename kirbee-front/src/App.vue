@@ -8,7 +8,9 @@
             {{ game.gameStarted }}
           </p>
           <div>
-            <button v-if="step === 1" @click="joinGame">Join</button>
+            <button v-if="step === 1 && !game.gameFull" @click="joinGame">
+              Join
+            </button>
             <button
               v-if="[2, 3].includes(step) && player.state !== 'ready'"
               @click="playerReady"
@@ -26,8 +28,12 @@
             />
           </div>
           <div style="display: flex; justify-content: space-around;">
-            <img src="/images/kirby/kirby_start.png" class="h-element" /><img
-              src="/images/knight/knight_start.png"
+            <img
+              :src="`/images/kirby/kirby_${playerState}.png`"
+              class="h-element"
+            />
+            <img
+              :src="`/images/knight/knight_${opponentState}.png`"
               class="h-element"
             />
           </div>
@@ -54,8 +60,11 @@ export default {
       gameStarted: false,
       gameWinner: null,
       countdown: null,
+      gameFull: false,
     },
     timer: null,
+    playerState: "start",
+    opponentState: "start",
   }),
 
   watch: {
@@ -91,22 +100,33 @@ export default {
       this.player = player;
     });
 
+    socket.on("gameFull", (isFull) => {
+      this.game.gameFull = isFull;
+      this.status = "Game is full";
+    });
+
     socket.on("gameStateChange", (game) => {
       this.game = game;
 
       if (this.game.gameStarted === "playing") {
         document.addEventListener("keydown", this.handleKeyDown);
+        document.addEventListener("click", this.handleKeyDown);
       }
 
       if (this.game.gameStarted === "gameover") {
         clearTimeout(this.timer);
         document.removeEventListener("keydown", this.handleKeyDown);
+        document.removeEventListener("click", this.handleKeyDown);
         this.displayMark = false;
         this.step = 3;
         if (this.game.gameWinner === this.player.character) {
           this.status = "You won!";
+          this.playerState = "win";
+          this.opponentState = "lose";
         } else {
           this.status = "You lost!";
+          this.playerState = "lose";
+          this.opponentState = "win";
         }
         this.restartGame();
       }
@@ -119,15 +139,16 @@ export default {
     },
     playerReady() {
       if (["You won!", "You lost!"].includes(this.status)) {
+        this.playerState = "start";
+        this.opponentState = "start";
+
         this.status = "Waiting for other player...";
       }
       this.status = `Joined as ${this.player.character}`;
-
       socket.emit("playerReady");
     },
     gameState() {
-      const hiddenSteps = ["playing", "gameover"];
-      return !hiddenSteps.includes(this.game.gameStarted);
+      return !["playing", "gameover"].includes(this.game.gameStarted);
     },
     hitMark() {
       socket.emit("hitMark", this.displayMark);

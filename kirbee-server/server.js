@@ -19,6 +19,7 @@ const gameInfos = {
   gameStarted: gameStates[0],
   gameWinner: null,
   countdown: null,
+  gameFull: false,
 };
 
 function findPlayer(id) {
@@ -33,6 +34,7 @@ io.on("connection", function (socket) {
   socket.on("joinGame", () => {
     const player = findPlayer(socket.id);
     if (!player && players.length < 2) {
+      gameInfos.gameFull = false;
       players.push({
         id: socket.id,
         player: players.length + 1,
@@ -49,6 +51,9 @@ io.on("connection", function (socket) {
         player: players[players.length - 1],
         game: gameInfos,
       });
+    } else if (!player && players.length >= 2) {
+      console.log(player, players.length);
+      socket.emit("gameFull", true);
     }
   });
 
@@ -93,9 +98,9 @@ io.on("connection", function (socket) {
     opponent.state = "waiting";
     player.state = "waiting";
 
-    const socket2 = io.sockets.sockets.get(opponent.id);
+    const socketOpponent = io.sockets.sockets.get(opponent.id);
     socket.emit("playerState", player);
-    socket2.emit("playerState", opponent);
+    socketOpponent.emit("playerState", opponent);
     io.emit("gameStateChange", gameInfos);
   });
 
